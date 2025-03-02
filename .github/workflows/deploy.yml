@@ -3,8 +3,9 @@ name: Deploy Next.js App
 on:
   push:
     branches:
-      - main  # Change if your default branch is different
-
+      - main
+  workflow_dispatch:
+    
 jobs:
   test:
     runs-on: ubuntu-latest
