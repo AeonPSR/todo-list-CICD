@@ -1,0 +1,52 @@
+name: Deploy Next.js App
+
+on:
+  push:
+    branches:
+      - main  # Change if your default branch is different
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Jest tests
+        run: npm test
+
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          build: npm run build
+          start: npm run start
+          wait-on: "http://localhost:3000"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Configure SSH Key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Run Ansible Playbook
+        run: ansible-playbook -i ansible/inventory.ini ansible/deploy.yml --key-file key.pem
